@@ -8,6 +8,10 @@ defmodule ClonetrollerTest do
     @compile {:no_warn_undefined, ResourceController}
 
     resources "/resources", ResourceController
+
+    scope "/admin" do
+      resources "/resources", ResourceController
+    end
   end
 
   defmodule Resource do
@@ -18,7 +22,7 @@ defmodule ClonetrollerTest do
 
     @impl Clonetroller
     def request(verb, path, request, meta) do
-      send(self(), {verb, path, request, meta})
+      {verb, path, request, meta}
     end
   end
 
@@ -28,25 +32,19 @@ defmodule ClonetrollerTest do
 
   describe "basic clone" do
     test "index", %{req: req} do
-      Resource.index(req)
-
-      assert_received {:get, path, ^req, meta}
+      assert {:get, path, ^req, meta} = Resource.index(req)
       assert path == "/resources"
       assert meta == %{controller: ResourceController, path: "/resources", path_params: []}
     end
 
     test "new", %{req: req} do
-      Resource.new(req)
-
-      assert_received {:get, path, ^req, meta}
+      assert {:get, path, ^req, meta} = Resource.new(req)
       assert path == "/resources/new"
       assert meta == %{controller: ResourceController, path: "/resources/new", path_params: []}
     end
 
     test "create", %{req: req} do
-      Resource.create(req)
-
-      assert_received {:post, path, ^req, meta}
+      assert {:post, path, ^req, meta} = Resource.create(req)
       assert path == "/resources"
       assert meta == %{controller: ResourceController, path: "/resources", path_params: []}
     end
@@ -54,9 +52,7 @@ defmodule ClonetrollerTest do
     test "show", %{req: req} do
       id = 3 |> :crypto.strong_rand_bytes() |> Base.url_encode64()
 
-      Resource.show(id, req)
-
-      assert_received {:get, path, ^req, meta}
+      assert {:get, path, ^req, meta} = Resource.show(id, req)
       assert path == "/resources/#{id}"
 
       assert meta == %{
@@ -69,9 +65,7 @@ defmodule ClonetrollerTest do
     test "edit", %{req: req} do
       id = 3 |> :crypto.strong_rand_bytes() |> Base.url_encode64()
 
-      Resource.edit(id, req)
-
-      assert_received {:get, path, ^req, meta}
+      assert {:get, path, ^req, meta} = Resource.edit(id, req)
       assert path == "/resources/#{id}/edit"
 
       assert meta == %{
@@ -84,9 +78,7 @@ defmodule ClonetrollerTest do
     test "update", %{req: req} do
       id = 3 |> :crypto.strong_rand_bytes() |> Base.url_encode64()
 
-      Resource.update(id, req)
-
-      assert_received {:patch, path, ^req, meta}
+      assert {:patch, path, ^req, meta} = Resource.update(id, req)
       assert path == "/resources/#{id}"
 
       assert meta == %{
@@ -99,9 +91,7 @@ defmodule ClonetrollerTest do
     test "delete", %{req: req} do
       id = 3 |> :crypto.strong_rand_bytes() |> Base.url_encode64()
 
-      Resource.delete(id, req)
-
-      assert_received {:delete, path, ^req, meta}
+      assert {:delete, path, ^req, meta} = Resource.delete(id, req)
       assert path == "/resources/#{id}"
 
       assert meta == %{

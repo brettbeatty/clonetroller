@@ -27,13 +27,14 @@ defmodule Clonetroller do
 
   @spec build_clone(router(), controller()) :: Macro.t()
   defp build_clone(router, controller) do
-    router
-    |> get_endpoints(controller)
+    controller
+    |> get_endpoints(router)
+    |> uniq()
     |> build_functions(router)
   end
 
-  @spec get_endpoints(router(), controller()) :: [endpoint()]
-  defp get_endpoints(router, controller) do
+  @spec get_endpoints(controller(), router()) :: [endpoint()]
+  defp get_endpoints(controller, router) do
     for route = %{plug: ^controller, plug_opts: action} <- router.__routes__(),
         is_atom(action) and not is_nil(route.helper) do
       %{
@@ -50,6 +51,13 @@ defmodule Clonetroller do
   @spec parse_path_params(path()) :: [String.t()]
   defp parse_path_params(path) do
     for ":" <> param <- Path.split(path), do: param
+  end
+
+  @spec uniq([endpoint()]) :: [endpoint()]
+  defp uniq(endpoints) do
+    endpoints
+    |> Enum.group_by(&{&1.action, length(&1.path_params)})
+    |> Enum.map(fn {_key, group} -> hd(group) end)
   end
 
   @spec build_functions([endpoint()], router()) :: Macro.t()
