@@ -20,8 +20,8 @@ defmodule Clonetroller do
   @typep variable() :: {atom(), keyword(), atom()}
 
   defmacro clone(router, controller) do
-    router = Macro.expand(router, __CALLER__) |> IO.inspect()
-    controller = Macro.expand(controller, __CALLER__) |> IO.inspect()
+    router = Macro.expand(router, __CALLER__)
+    controller = Macro.expand(controller, __CALLER__)
     build_clone(router, controller)
   end
 
