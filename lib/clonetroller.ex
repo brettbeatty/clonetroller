@@ -1,11 +1,52 @@
 defmodule Clonetroller do
+  @external_resource readme = Path.join(__DIR__, "../README.md")
+  @moduledoc readme |> File.read!() |> String.split("<!-- MODULEDOC -->") |> Enum.at(1)
+
+  @typedoc """
+  The controller being cloned.
+  """
   @type controller() :: module()
+
+  @typedoc """
+  Metadata about request given to `c:request/4` as its last argument.
+  """
   @type meta() :: %{controller: controller(), path: path(), path_params: keyword()}
+
+  @typedoc """
+  Represents a path.
+
+  As the second argument to `c:request/4`, this will have the path params encoded.
+
+      "/resources/920d1ff0-261a-4508-9e0c-e3c19ffa7f10/edit"
+
+  Inside `t:meta/0`, this will have the path parameter names.
+
+      "/resources/:id/edit"
+
+  """
   @type path() :: String.t()
+
+  @typedoc """
+  The request to be sent to path.
+
+  This can be any map. Typically it will just be body params, but it's passed as
+  is to `c:request/4`, which can do with the request what it will.
+  """
   @type request() :: map()
+
+  @typedoc """
+  The router with routes for the controller.
+  """
   @type router() :: module()
+
+  @typedoc """
+  This can be a specific verb atom like `:get` or `:post` or the catch-all `:*`.
+  """
   @type verb() :: atom()
 
+  @doc """
+  Make request built by cloned functions.
+  """
   @callback request(verb(), path(), request(), meta()) :: any()
 
   @typep action() :: atom()
@@ -22,6 +63,16 @@ defmodule Clonetroller do
            verb: verb()
          }
 
+  @doc """
+  Clone actions from controller to client.
+
+  The generated functions will first expect any path parameters in order,
+  followed by a `t:request/0`, which can be any map and will be handled by
+  `c:request/4`, and an optional list of query parameters.
+
+      clone MyAppWeb.Router, MyAppWeb.SomeController
+
+  """
   defmacro clone(router, controller) do
     router = Macro.expand(router, __CALLER__)
     controller = Macro.expand(controller, __CALLER__)
